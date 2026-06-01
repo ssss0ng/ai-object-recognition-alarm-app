@@ -399,3 +399,14 @@ Android 설정에서 `Expo Go` 앱의 카메라 권한을 허용하세요.
 이 MVP는 Expo Go 테스트 안정성을 우선합니다. SDK 54의 Expo Go에서는 Android notification 기능이 제한되므로, 현재 앱은 `Start Alarm Test` 버튼과 앱 안의 진동으로 알람 흐름을 테스트합니다.
 
 나중에 완성도를 높이려면 Android native exact alarm 기능을 추가할 수 있습니다.
+## Android Safe Area 안내
+
+Android phone에는 화면 아래에 `Home`, `Back`, `Recent apps` 버튼이나 gesture navigation 영역이 있습니다. 이 영역을 고려하지 않으면 앱의 아래쪽 버튼이 Android system navigation bar와 겹쳐서 누르기 어려울 수 있습니다.
+
+현재 mobile app은 `react-native-safe-area-context`의 `SafeAreaProvider`와 `useSafeAreaInsets()`를 사용해서 주요 화면의 아래쪽 여백을 자동으로 추가합니다. 그래서 `HomeScreen`, `Create Alarm`, `General Object Mode`, `Custom Object Mode`, `CameraCaptureScreen`, `ResultScreen`의 버튼이 Android navigation area 뒤에 숨지 않도록 조정되어 있습니다.
+
+수정 후에도 화면이 이상하게 보이면 Expo cache가 남아 있을 수 있으므로 아래 명령으로 다시 실행하세요.
+
+```bash
+npx expo start -c
+```

@@ -1,12 +1,18 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { GENERAL_MODE } from "../constants/modes";
 
 export default function AlarmCard({ alarm }) {
+  const targetText =
+    alarm.mode === GENERAL_MODE
+      ? (alarm.selectedObjects || []).join(", ") || "No objects selected"
+      : alarm.objectId || "Not selected yet";
+
   return (
     <View style={styles.card}>
       <Text style={styles.time}>{alarm.time}</Text>
       <Text style={styles.detail}>Mode: {alarm.mode}</Text>
-      <Text style={styles.detail}>Target: {alarm.targetObject || alarm.objectId || "Not selected yet"}</Text>
+      <Text style={styles.detail}>Selected: {targetText}</Text>
     </View>
   );
 }

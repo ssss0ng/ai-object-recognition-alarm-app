@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AppButton from "../components/AppButton";
 import { CUSTOM_MODE } from "../constants/modes";
@@ -9,6 +10,7 @@ import { scheduleAlarm } from "../services/alarmService";
 import { addRegisteredCustomObjectId, saveAlarm } from "../services/storageService";
 
 export default function CustomObjectRegisterScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const baseAlarm = route.params?.baseAlarm;
   const cameraRef = useRef(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -69,7 +71,12 @@ export default function CustomObjectRegisterScreen({ navigation, route }) {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
+      >
       <Text style={styles.label}>Custom Object ID</Text>
       <TextInput
         value={objectId}
@@ -101,7 +108,8 @@ export default function CustomObjectRegisterScreen({ navigation, route }) {
 
       {resultMessage ? <Text style={styles.success}>{resultMessage}</Text> : null}
       <AppButton title="Register Custom Object" onPress={submitRegistration} loading={saving} />
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -109,6 +117,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f9fafb"
+  },
+  scroll: {
+    flex: 1
   },
   content: {
     padding: 20,

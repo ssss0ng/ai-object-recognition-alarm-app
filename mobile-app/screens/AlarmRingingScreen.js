@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
 import { StyleSheet, Text, Vibration, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AppButton from "../components/AppButton";
 import { GENERAL_MODE } from "../constants/modes";
 
 export default function AlarmRingingScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const alarm = route.params?.alarm;
 
   useEffect(() => {
@@ -18,7 +20,7 @@ export default function AlarmRingingScreen({ navigation, route }) {
 
   if (!alarm) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingBottom: insets.bottom + 24 }]}>
         <Text style={styles.error}>No alarm data found.</Text>
       </View>
     );
@@ -27,11 +29,11 @@ export default function AlarmRingingScreen({ navigation, route }) {
   const targetText = alarm.mode === GENERAL_MODE ? alarm.targetObject : alarm.objectId;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + 24 }]}>
       <Text style={styles.title}>Alarm Ringing</Text>
       <Text style={styles.time}>{alarm.time}</Text>
       <Text style={styles.detail}>Mode: {alarm.mode}</Text>
-      <Text style={styles.target}>Target: {targetText}</Text>
+      <Text style={styles.target}>Target object: {targetText}</Text>
       <Text style={styles.message}>Take a photo of this object to dismiss the alarm.</Text>
       <Text style={styles.note}>
         Expo Go test mode uses in-app vibration. Real background alarm sound can be added later with a development build.

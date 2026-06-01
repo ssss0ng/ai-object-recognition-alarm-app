@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Alert, Image, StyleSheet, Text, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AppButton from "../components/AppButton";
 import { DEFAULT_MODEL_NAME } from "../constants/config";
@@ -8,6 +9,7 @@ import { GENERAL_MODE } from "../constants/modes";
 import { predictCustom, predictGeneral } from "../services/api";
 
 export default function CameraCaptureScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const cameraRef = useRef(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [imageUri, setImageUri] = useState(null);
@@ -69,7 +71,7 @@ export default function CameraCaptureScreen({ navigation, route }) {
         </View>
       )}
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, { paddingBottom: insets.bottom + 16 }]}>
         {imageUri ? (
           <>
             <AppButton title="Submit for Recognition" onPress={submitPhoto} loading={uploading} />

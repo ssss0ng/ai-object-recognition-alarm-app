@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
-import { StyleSheet, Text, Vibration, View } from "react-native";
+import { ScrollView, StyleSheet, Text, Vibration, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AppButton from "../components/AppButton";
 import { GENERAL_MODE } from "../constants/modes";
 
 export default function ResultScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const { result, mode, alarm, targetObject, objectId } = route.params;
 
   useEffect(() => {
@@ -23,7 +25,10 @@ export default function ResultScreen({ navigation, route }) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
+    >
       <Text style={result.success ? styles.successTitle : styles.failTitle}>
         {result.success ? "Alarm dismissed successfully." : "Recognition failed. Please retake the photo."}
       </Text>
@@ -56,13 +61,17 @@ export default function ResultScreen({ navigation, route }) {
       ) : (
         <AppButton title="Retake Photo" onPress={retakePhoto} />
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f9fafb"
+  },
+  content: {
+    flexGrow: 1,
     backgroundColor: "#f9fafb",
     padding: 20,
     justifyContent: "center",

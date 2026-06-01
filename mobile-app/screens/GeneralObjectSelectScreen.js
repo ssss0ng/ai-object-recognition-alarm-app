@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AppButton from "../components/AppButton";
 import ObjectCard from "../components/ObjectCard";
 import { GENERAL_MODE } from "../constants/modes";
 import { FALLBACK_GENERAL_OBJECTS } from "../constants/objects";
 import { getGeneralObjects } from "../services/api";
-import { getRandomTargetObject, scheduleAlarm } from "../services/alarmService";
+import { scheduleAlarm } from "../services/alarmService";
 import { saveAlarm, saveSelectedGeneralObjects } from "../services/storageService";
 
 export default function GeneralObjectSelectScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const { baseAlarm } = route.params;
   const [objects, setObjects] = useState(FALLBACK_GENERAL_OBJECTS);
   const [selectedObjects, setSelectedObjects] = useState([]);
@@ -42,15 +44,14 @@ export default function GeneralObjectSelectScreen({ navigation, route }) {
 
     setSaving(true);
     try {
-      const targetObject = getRandomTargetObject(selectedObjects);
       const notificationId = await scheduleAlarm(baseAlarm);
       const alarm = {
         ...baseAlarm,
         mode: GENERAL_MODE,
         selectedObjects,
-        targetObject,
         notificationId
       };
+      console.log("Saved selected general objects:", selectedObjects);
       await saveSelectedGeneralObjects(selectedObjects);
       await saveAlarm(alarm);
       navigation.navigate("Home");
@@ -62,11 +63,12 @@ export default function GeneralObjectSelectScreen({ navigation, route }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + 20 }]}>
       <Text style={styles.message}>{sourceMessage}</Text>
       <FlatList
         data={objects}
         keyExtractor={(item) => item}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <ObjectCard name={item} selected={selectedObjects.includes(item)} onPress={() => toggleObject(item)} />
         )}
@@ -87,6 +89,9 @@ const styles = StyleSheet.create({
     color: "#4b5563",
     marginBottom: 12,
     fontWeight: "600"
+  },
+  listContent: {
+    paddingBottom: 12
   },
   count: {
     color: "#111827",

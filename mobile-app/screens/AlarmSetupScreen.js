@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AppButton from "../components/AppButton";
 import { CUSTOM_MODE, GENERAL_MODE } from "../constants/modes";
 import { saveLastRecognitionMode } from "../services/storageService";
 
 export default function AlarmSetupScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [time, setTime] = useState("");
   const [mode, setMode] = useState(GENERAL_MODE);
 
@@ -31,7 +33,7 @@ export default function AlarmSetupScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + 24 }]}>
       <Text style={styles.label}>Alarm Time</Text>
       <TextInput
         value={time}

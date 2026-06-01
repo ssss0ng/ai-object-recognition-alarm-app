@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AppButton from "../components/AppButton";
 import { CUSTOM_MODE, GENERAL_MODE } from "../constants/modes";
 
 export default function ModeSelectScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const { baseAlarm } = route.params;
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export default function ModeSelectScreen({ navigation, route }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + 24 }]}>
       <View style={styles.panel}>
         <Text style={styles.title}>General Object Mode</Text>
         <Text style={styles.body}>Choose household objects. When the alarm rings, one object will be randomly selected.</Text>

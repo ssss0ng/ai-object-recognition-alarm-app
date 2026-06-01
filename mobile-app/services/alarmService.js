@@ -1,3 +1,5 @@
+import { GENERAL_MODE } from "../constants/modes";
+
 export function setupNotificationHandler() {
   // Expo SDK 54의 Expo Go에서는 Android push notification 기능이 완전히 지원되지 않습니다.
   // 과제 시연용 Expo Go 테스트에서는 앱 안의 Start Alarm Test 버튼으로 알람 흐름을 확인합니다.
@@ -44,11 +46,26 @@ export async function cancelAlarm(alarmId) {
 }
 
 export function getRandomTargetObject(selectedObjects) {
-  if (!selectedObjects || selectedObjects.length === 0) {
-    throw new Error("No selected objects. Please select at least one object.");
+  if (!Array.isArray(selectedObjects) || selectedObjects.length === 0) {
+    throw new Error("No selected objects available.");
   }
   const index = Math.floor(Math.random() * selectedObjects.length);
   return selectedObjects[index];
+}
+
+export function prepareAlarmForRinging(alarm) {
+  if (alarm.mode !== GENERAL_MODE) {
+    return alarm;
+  }
+
+  const targetObject = getRandomTargetObject(alarm.selectedObjects);
+  console.log("Selected general objects:", alarm.selectedObjects);
+  console.log("Random target object:", targetObject);
+
+  return {
+    ...alarm,
+    targetObject
+  };
 }
 
 export function handleNotificationResponse() {

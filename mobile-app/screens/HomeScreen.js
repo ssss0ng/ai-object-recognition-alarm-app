@@ -1,15 +1,17 @@
 import React, { useCallback, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AlarmCard from "../components/AlarmCard";
 import AppButton from "../components/AppButton";
 import { GENERAL_MODE } from "../constants/modes";
 import { checkHealth } from "../services/api";
 import { getSavedAlarms } from "../services/storageService";
-import { getRandomTargetObject } from "../services/alarmService";
+import { getRandomTargetObject, prepareAlarmForRinging } from "../services/alarmService";
 
 export default function HomeScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [alarms, setAlarms] = useState([]);
   const [message, setMessage] = useState("");
   const [checking, setChecking] = useState(false);
@@ -34,18 +36,34 @@ export default function HomeScreen({ navigation }) {
   }
 
   function openAlarm(alarm) {
-    if (!alarm.targetObject && !alarm.objectId) {
+    const hasGeneralObjects = alarm.mode === GENERAL_MODE && Array.isArray(alarm.selectedObjects) && alarm.selectedObjects.length > 0;
+    const hasCustomObject = Boolean(alarm.objectId);
+
+    if (!hasGeneralObjects && !hasCustomObject) {
       Alert.alert("Alarm is incomplete", "Please create an alarm with a target object first.");
       return;
     }
-    navigation.navigate("AlarmRinging", { alarm });
+
+    try {
+      navigation.navigate("AlarmRinging", { alarm: prepareAlarmForRinging(alarm) });
+    } catch (error) {
+      Alert.alert("Alarm start failed", error.message);
+    }
   }
 
   function startAlarmTest() {
-    const usableAlarm = alarms.find((alarm) => alarm.targetObject || alarm.objectId);
+    const usableAlarm = alarms.find(
+      (alarm) =>
+        (alarm.mode === GENERAL_MODE && Array.isArray(alarm.selectedObjects) && alarm.selectedObjects.length > 0) ||
+        alarm.objectId
+    );
 
     if (usableAlarm) {
-      navigation.navigate("AlarmRinging", { alarm: usableAlarm });
+      try {
+        navigation.navigate("AlarmRinging", { alarm: prepareAlarmForRinging(usableAlarm) });
+      } catch (error) {
+        Alert.alert("Alarm test failed", error.message);
+      }
       return;
     }
 
@@ -65,13 +83,14 @@ export default function HomeScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + 20 }]}>
       <Text style={styles.title}>AI Object Recognition Alarm</Text>
       <Text style={styles.subtitle}>Saved Alarms</Text>
 
       <FlatList
         data={alarms}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
         ListEmptyComponent={<Text style={styles.empty}>No alarms yet. Create your first alarm.</Text>}
         renderItem={({ item }) => (
           <Pressable onPress={() => openAlarm(item)}>
@@ -114,6 +133,9 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     paddingVertical: 24,
     textAlign: "center"
+  },
+  listContent: {
+    paddingBottom: 12
   },
   actions: {
     gap: 10,
