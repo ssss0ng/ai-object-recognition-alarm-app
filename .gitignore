@@ -1,0 +1,11 @@
+backend/venv/
+backend/__pycache__/
+backend/**/*.pyc
+backend/registered_objects/*.json
+backend/embeddings/*.pt
+backend/embeddings/*.npy
+mobile-app/node_modules/
+mobile-app/.expo/
+mobile-app/dist/
+.env
+.DS_Store

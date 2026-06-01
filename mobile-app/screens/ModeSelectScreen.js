@@ -1,0 +1,65 @@
+import React, { useEffect } from "react";
+import { StyleSheet, Text, View } from "react-native";
+
+import AppButton from "../components/AppButton";
+import { CUSTOM_MODE, GENERAL_MODE } from "../constants/modes";
+
+export default function ModeSelectScreen({ navigation, route }) {
+  const { baseAlarm } = route.params;
+
+  useEffect(() => {
+    if (baseAlarm?.mode === GENERAL_MODE) {
+      navigation.replace("GeneralObjectSelect", { baseAlarm });
+    }
+    if (baseAlarm?.mode === CUSTOM_MODE) {
+      navigation.replace("CustomObjectRegister", { baseAlarm });
+    }
+  }, [baseAlarm, navigation]);
+
+  if (baseAlarm?.mode === GENERAL_MODE || baseAlarm?.mode === CUSTOM_MODE) {
+    return null;
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.panel}>
+        <Text style={styles.title}>General Object Mode</Text>
+        <Text style={styles.body}>Choose household objects. When the alarm rings, one object will be randomly selected.</Text>
+        <AppButton title="Choose General Objects" onPress={() => navigation.navigate("GeneralObjectSelect", { baseAlarm: { ...baseAlarm, mode: GENERAL_MODE } })} />
+      </View>
+
+      <View style={styles.panel}>
+        <Text style={styles.title}>Custom Object Mode</Text>
+        <Text style={styles.body}>Register your own object with multiple photos. Later, take a photo of the same object to dismiss the alarm.</Text>
+        <AppButton title="Register Custom Object" onPress={() => navigation.navigate("CustomObjectRegister", { baseAlarm: { ...baseAlarm, mode: CUSTOM_MODE } })} />
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f9fafb",
+    padding: 20,
+    gap: 14
+  },
+  panel: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    padding: 16,
+    backgroundColor: "#ffffff",
+    gap: 10
+  },
+  title: {
+    color: "#111827",
+    fontSize: 18,
+    fontWeight: "900"
+  },
+  body: {
+    color: "#4b5563",
+    fontSize: 15,
+    lineHeight: 21
+  }
+});
