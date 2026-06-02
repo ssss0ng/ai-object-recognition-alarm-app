@@ -112,3 +112,14 @@ export async function getCustomObjects() {
     explainNetworkError(error);
   }
 }
+
+export async function deleteCustomObject(objectId) {
+  try {
+    const response = await fetch(makeUrl(`/custom/${encodeURIComponent(objectId)}`), {
+      method: "DELETE"
+    });
+    return await parseResponse(response);
+  } catch (error) {
+    explainNetworkError(error);
+  }
+}

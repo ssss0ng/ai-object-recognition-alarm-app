@@ -22,13 +22,15 @@ export default function AlarmSetupScreen({ navigation }) {
       id: String(Date.now()),
       time,
       mode,
-      active: true
+      enabled: true,
+      active: true,
+      createdAt: new Date().toISOString()
     };
 
     if (mode === GENERAL_MODE) {
       navigation.navigate("GeneralObjectSelect", { baseAlarm });
     } else {
-      navigation.navigate("CustomObjectRegister", { baseAlarm });
+      navigation.navigate("CustomObjectSelect", { baseAlarm, fromAlarmCreation: true });
     }
   }
 

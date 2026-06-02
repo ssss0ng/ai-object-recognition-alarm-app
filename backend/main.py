@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, Form, UploadFile
 
 from constants import (
+    CUSTOM_SECOND_BEST_MARGIN,
     CUSTOM_SIMILARITY_THRESHOLD,
     HOUSEHOLD_OBJECTS,
     MIN_CUSTOM_IMAGES,
@@ -14,6 +15,7 @@ from custom_similarity import (
 from general_classifier import predict_general, validate_general_request
 from preprocessing import build_custom_registration_variants, preprocess_image, read_image_upload
 from schemas import (
+    CustomDeleteResponse,
     CustomObjectsResponse,
     CustomPredictionResponse,
     CustomRegisterResponse,
@@ -22,7 +24,9 @@ from schemas import (
     RootResponse,
 )
 from storage import (
+    delete_custom_object,
     ensure_storage_dirs,
+    load_all_custom_embeddings,
     list_custom_objects,
     load_custom_embedding,
     save_custom_object,
@@ -117,16 +121,65 @@ async def predict_custom_endpoint(
     image_tensor = preprocess_image(image, "resnet")
     input_embedding = extract_embedding(image_tensor)
     similarity = cosine_similarity(input_embedding, stored_embedding)
+    all_embeddings = load_all_custom_embeddings()
+    all_similarities = sorted(
+        [
+            {
+                "object_id": stored_object_id,
+                "similarity": cosine_similarity(input_embedding, embedding),
+            }
+            for stored_object_id, embedding in all_embeddings.items()
+        ],
+        key=lambda item: item["similarity"],
+        reverse=True,
+    )
+    best_match = all_similarities[0] if all_similarities else {"object_id": object_id, "similarity": similarity}
+    second_best = all_similarities[1] if len(all_similarities) > 1 else None
+    target_is_best = best_match["object_id"] == object_id
+    margin = round(similarity - second_best["similarity"], 4) if second_best else None
+    margin_passed = second_best is None or margin >= CUSTOM_SECOND_BEST_MARGIN
+    success = is_custom_match(similarity) and target_is_best and margin_passed
+
+    print(
+        {
+            "mode": "custom",
+            "object_id": object_id,
+            "similarity": similarity,
+            "threshold": CUSTOM_SIMILARITY_THRESHOLD,
+            "best_match": best_match,
+            "second_best": second_best,
+            "margin": margin,
+            "success": success,
+        }
+    )
 
     return {
         "mode": "custom",
         "object_id": object_id,
         "similarity": similarity,
         "threshold": CUSTOM_SIMILARITY_THRESHOLD,
-        "success": is_custom_match(similarity),
+        "best_match_object_id": best_match["object_id"],
+        "best_match_similarity": best_match["similarity"],
+        "second_best_object_id": second_best["object_id"] if second_best else None,
+        "second_best_similarity": second_best["similarity"] if second_best else None,
+        "margin": margin,
+        "margin_threshold": CUSTOM_SECOND_BEST_MARGIN,
+        "target_is_best": target_is_best,
+        "success": success,
     }
 
 
 @app.get("/objects/custom", response_model=CustomObjectsResponse)
 def get_custom_objects():
     return {"objects": list_custom_objects()}
+
+
+@app.delete("/custom/{object_id}", response_model=CustomDeleteResponse)
+def delete_custom_object_endpoint(object_id: str):
+    object_id = object_id.strip()
+    validate_object_id(object_id)
+    delete_custom_object(object_id)
+    return {
+        "object_id": object_id,
+        "status": "deleted",
+    }

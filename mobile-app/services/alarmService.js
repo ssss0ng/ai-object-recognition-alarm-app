@@ -42,6 +42,7 @@ export async function scheduleAlarm(alarmConfig) {
 }
 
 export async function cancelAlarm(alarmId) {
+  // Expo Go fallback: no real background notification is scheduled here.
   return Boolean(alarmId);
 }
 
@@ -66,6 +67,10 @@ export function prepareAlarmForRinging(alarm) {
     ...alarm,
     targetObject
   };
+}
+
+export function startAlarmTest(alarm) {
+  return prepareAlarmForRinging(alarm);
 }
 
 export function handleNotificationResponse() {

@@ -7,6 +7,7 @@ import AlarmRingingScreen from "./screens/AlarmRingingScreen";
 import AlarmSetupScreen from "./screens/AlarmSetupScreen";
 import CameraCaptureScreen from "./screens/CameraCaptureScreen";
 import CustomObjectRegisterScreen from "./screens/CustomObjectRegisterScreen";
+import CustomObjectSelectScreen from "./screens/CustomObjectSelectScreen";
 import GeneralObjectSelectScreen from "./screens/GeneralObjectSelectScreen";
 import HomeScreen from "./screens/HomeScreen";
 import ModeSelectScreen from "./screens/ModeSelectScreen";
@@ -30,6 +31,7 @@ export default function App() {
           <Stack.Screen name="AlarmSetup" component={AlarmSetupScreen} options={{ title: "Create Alarm" }} />
           <Stack.Screen name="ModeSelect" component={ModeSelectScreen} options={{ title: "Select Mode" }} />
           <Stack.Screen name="GeneralObjectSelect" component={GeneralObjectSelectScreen} options={{ title: "General Objects" }} />
+          <Stack.Screen name="CustomObjectSelect" component={CustomObjectSelectScreen} options={{ title: "Custom Objects" }} />
           <Stack.Screen name="CustomObjectRegister" component={CustomObjectRegisterScreen} options={{ title: "Register Custom Object" }} />
           <Stack.Screen name="AlarmRinging" component={AlarmRingingScreen} options={{ title: "Alarm Ringing" }} />
           <Stack.Screen name="CameraCapture" component={CameraCaptureScreen} options={{ title: "Camera" }} />

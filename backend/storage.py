@@ -57,6 +57,34 @@ def load_custom_embedding(object_id: str) -> torch.Tensor:
     return torch.load(path, map_location="cpu")
 
 
+def load_all_custom_embeddings() -> dict[str, torch.Tensor]:
+    ensure_storage_dirs()
+    embeddings = {}
+    for path in sorted(EMBEDDINGS_DIR.glob("*.pt")):
+        object_id = path.stem
+        validate_object_id(object_id)
+        embeddings[object_id] = torch.load(path, map_location="cpu")
+    return embeddings
+
+
+def delete_custom_object(object_id: str) -> bool:
+    ensure_storage_dirs()
+    validate_object_id(object_id)
+    deleted = False
+
+    embedding_file = embedding_path(object_id)
+    if embedding_file.exists():
+        embedding_file.unlink()
+        deleted = True
+
+    metadata_file = metadata_path(object_id)
+    if metadata_file.exists():
+        metadata_file.unlink()
+        deleted = True
+
+    return deleted
+
+
 def list_custom_objects() -> list[dict]:
     ensure_storage_dirs()
     objects = []

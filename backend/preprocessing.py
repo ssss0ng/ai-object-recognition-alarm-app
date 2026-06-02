@@ -51,8 +51,7 @@ def build_custom_registration_variants(image: Image.Image) -> list[Image.Image]:
         image,
         ImageEnhance.Brightness(image).enhance(1.15),
         ImageEnhance.Brightness(image).enhance(0.85),
-        image.rotate(8, resample=Image.Resampling.BICUBIC, expand=False),
-        ImageOps.mirror(image),
+        image.rotate(6, resample=Image.Resampling.BICUBIC, expand=False),
     ]
 
 

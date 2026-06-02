@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -7,8 +7,8 @@ import AlarmCard from "../components/AlarmCard";
 import AppButton from "../components/AppButton";
 import { GENERAL_MODE } from "../constants/modes";
 import { checkHealth } from "../services/api";
-import { getSavedAlarms } from "../services/storageService";
-import { getRandomTargetObject, prepareAlarmForRinging } from "../services/alarmService";
+import { deleteAlarm, getSavedAlarms, toggleAlarm } from "../services/storageService";
+import { cancelAlarm, prepareAlarmForRinging } from "../services/alarmService";
 
 export default function HomeScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -18,9 +18,19 @@ export default function HomeScreen({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
-      getSavedAlarms().then(setAlarms).catch(() => setAlarms([]));
+      refreshAlarms();
     }, [])
   );
+
+  async function refreshAlarms() {
+    try {
+      const savedAlarms = await getSavedAlarms();
+      setAlarms(savedAlarms);
+    } catch (error) {
+      setAlarms([]);
+      setMessage("Saved alarms could not be loaded.");
+    }
+  }
 
   async function handleCheckBackend() {
     setChecking(true);
@@ -35,51 +45,81 @@ export default function HomeScreen({ navigation }) {
     }
   }
 
-  function openAlarm(alarm) {
+  function validateAlarmForTest(alarm) {
     const hasGeneralObjects = alarm.mode === GENERAL_MODE && Array.isArray(alarm.selectedObjects) && alarm.selectedObjects.length > 0;
-    const hasCustomObject = Boolean(alarm.objectId);
+    const hasCustomObject = Boolean(alarm.customObjectId || alarm.objectId);
 
     if (!hasGeneralObjects && !hasCustomObject) {
-      Alert.alert("Alarm is incomplete", "Please create an alarm with a target object first.");
-      return;
-    }
-
-    try {
-      navigation.navigate("AlarmRinging", { alarm: prepareAlarmForRinging(alarm) });
-    } catch (error) {
-      Alert.alert("Alarm start failed", error.message);
+      throw new Error("Please create an alarm with a target object first.");
     }
   }
 
-  function startAlarmTest() {
-    const usableAlarm = alarms.find(
-      (alarm) =>
-        (alarm.mode === GENERAL_MODE && Array.isArray(alarm.selectedObjects) && alarm.selectedObjects.length > 0) ||
-        alarm.objectId
-    );
-
-    if (usableAlarm) {
-      try {
-        navigation.navigate("AlarmRinging", { alarm: prepareAlarmForRinging(usableAlarm) });
-      } catch (error) {
-        Alert.alert("Alarm test failed", error.message);
-      }
-      return;
+  function testAlarm(alarm) {
+    try {
+      validateAlarmForTest(alarm);
+      navigation.navigate("AlarmRinging", { alarm: prepareAlarmForRinging(alarm) });
+    } catch (error) {
+      Alert.alert("Alarm test failed", error.message);
     }
+  }
 
-    const selectedObjects = ["bottle", "cup", "book"];
-    const targetObject = getRandomTargetObject(selectedObjects);
-    navigation.navigate("AlarmRinging", {
-      alarm: {
-        id: `test-${Date.now()}`,
-        time: "Test",
-        mode: GENERAL_MODE,
-        selectedObjects,
-        targetObject,
-        active: true,
-        notificationId: "expo-go-test"
-      }
-    });
+  async function handleToggleAlarm(alarm) {
+    try {
+      const nextAlarms = await toggleAlarm(alarm.id);
+      setAlarms(nextAlarms);
+      setMessage(`Alarm turned ${(alarm.enabled ?? alarm.active ?? true) ? "OFF" : "ON"}.`);
+    } catch (error) {
+      Alert.alert("Alarm update failed", error.message);
+    }
+  }
+
+  function confirmDeleteAlarm(alarm) {
+    Alert.alert(
+      "Delete alarm",
+      "Are you sure you want to delete this alarm?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await cancelAlarm(alarm.notificationId || alarm.id);
+              const nextAlarms = await deleteAlarm(alarm.id);
+              setAlarms(nextAlarms);
+              setMessage("Alarm deleted.");
+            } catch (error) {
+              Alert.alert("Delete failed", error.message);
+            }
+          }
+        }
+      ],
+      { cancelable: true }
+    );
+  }
+
+  function showAlarmActions(alarm) {
+    Alert.alert(
+      "Alarm management",
+      `${alarm.time} alarm`,
+      [
+        {
+          text: (alarm.enabled ?? alarm.active ?? true) ? "Turn OFF" : "Turn ON",
+          onPress: () => handleToggleAlarm(alarm)
+        },
+        {
+          text: "Start Test",
+          onPress: () => testAlarm(alarm)
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => confirmDeleteAlarm(alarm)
+        },
+        { text: "Cancel", style: "cancel" }
+      ],
+      { cancelable: true }
+    );
   }
 
   return (
@@ -93,9 +133,11 @@ export default function HomeScreen({ navigation }) {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={<Text style={styles.empty}>No alarms yet. Create your first alarm.</Text>}
         renderItem={({ item }) => (
-          <Pressable onPress={() => openAlarm(item)}>
-            <AlarmCard alarm={item} />
-          </Pressable>
+          <AlarmCard
+            alarm={item}
+            onToggle={() => handleToggleAlarm(item)}
+            onPress={() => showAlarmActions(item)}
+          />
         )}
       />
 
@@ -103,7 +145,6 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.actions}>
         <AppButton title="Check Backend Connection" onPress={handleCheckBackend} loading={checking} />
-        <AppButton title="Start Alarm Test" variant="secondary" onPress={startAlarmTest} />
         <AppButton title="Create Alarm" onPress={() => navigation.navigate("AlarmSetup")} />
         <AppButton title="Register Custom Object" variant="secondary" onPress={() => navigation.navigate("CustomObjectRegister")} />
       </View>

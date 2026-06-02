@@ -14,7 +14,7 @@ export default function ModeSelectScreen({ navigation, route }) {
       navigation.replace("GeneralObjectSelect", { baseAlarm });
     }
     if (baseAlarm?.mode === CUSTOM_MODE) {
-      navigation.replace("CustomObjectRegister", { baseAlarm });
+      navigation.replace("CustomObjectSelect", { baseAlarm, fromAlarmCreation: true });
     }
   }, [baseAlarm, navigation]);
 
@@ -33,7 +33,7 @@ export default function ModeSelectScreen({ navigation, route }) {
       <View style={styles.panel}>
         <Text style={styles.title}>Custom Object Mode</Text>
         <Text style={styles.body}>Register your own object with multiple photos. Later, take a photo of the same object to dismiss the alarm.</Text>
-        <AppButton title="Register Custom Object" onPress={() => navigation.navigate("CustomObjectRegister", { baseAlarm: { ...baseAlarm, mode: CUSTOM_MODE } })} />
+        <AppButton title="Choose Custom Object" onPress={() => navigation.navigate("CustomObjectSelect", { baseAlarm: { ...baseAlarm, mode: CUSTOM_MODE }, fromAlarmCreation: true })} />
       </View>
     </View>
   );

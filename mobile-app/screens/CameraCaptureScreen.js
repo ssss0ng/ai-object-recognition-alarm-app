@@ -15,6 +15,7 @@ export default function CameraCaptureScreen({ navigation, route }) {
   const [imageUri, setImageUri] = useState(null);
   const [uploading, setUploading] = useState(false);
   const { mode, targetObject, objectId, alarm } = route.params;
+  const customObjectId = objectId || alarm?.customObjectId || alarm?.objectId;
 
   async function capturePhoto() {
     if (!permission?.granted) {
@@ -39,17 +40,22 @@ export default function CameraCaptureScreen({ navigation, route }) {
 
     setUploading(true);
     try {
+      const startTime = Date.now();
       const result =
         mode === GENERAL_MODE
           ? await predictGeneral(imageUri, targetObject, DEFAULT_MODEL_NAME)
-          : await predictCustom(objectId, imageUri);
+          : await predictCustom(customObjectId, imageUri);
+      const elapsedTimeMs = Date.now() - startTime;
 
       navigation.navigate("Result", {
-        result,
+        result: {
+          ...result,
+          elapsedTimeMs
+        },
         mode,
         alarm,
         targetObject,
-        objectId
+        objectId: customObjectId
       });
     } catch (error) {
       Alert.alert("Upload failed", error.message);
@@ -74,6 +80,7 @@ export default function CameraCaptureScreen({ navigation, route }) {
       <View style={[styles.actions, { paddingBottom: insets.bottom + 16 }]}>
         {imageUri ? (
           <>
+            {uploading ? <Text style={styles.loadingText}>Recognizing image...</Text> : null}
             <AppButton title="Submit for Recognition" onPress={submitPhoto} loading={uploading} />
             <AppButton title="Retake" variant="secondary" onPress={() => setImageUri(null)} />
           </>
@@ -112,5 +119,11 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "#f9fafb",
     gap: 10
+  },
+  loadingText: {
+    color: "#374151",
+    fontSize: 14,
+    fontWeight: "700",
+    textAlign: "center"
   }
 });

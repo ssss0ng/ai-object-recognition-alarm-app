@@ -26,7 +26,8 @@ export default function AlarmRingingScreen({ navigation, route }) {
     );
   }
 
-  const targetText = alarm.mode === GENERAL_MODE ? alarm.targetObject : alarm.objectId;
+  const customObjectId = alarm.customObjectId || alarm.objectId;
+  const targetText = alarm.mode === GENERAL_MODE ? alarm.targetObject : customObjectId;
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom + 24 }]}>
@@ -45,7 +46,7 @@ export default function AlarmRingingScreen({ navigation, route }) {
             alarm,
             mode: alarm.mode,
             targetObject: alarm.targetObject,
-            objectId: alarm.objectId
+            objectId: customObjectId
           })
         }
       />
