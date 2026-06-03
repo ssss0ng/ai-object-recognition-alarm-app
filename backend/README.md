@@ -1,165 +1,124 @@
 # AI Object Recognition Alarm App Backend
 
-This is the FastAPI backend for an Android AI alarm app. It receives images, runs PyTorch object recognition, and returns whether the alarm unlock condition succeeded.
+이 폴더는 FastAPI 기반 backend입니다. mobile app에서 업로드한 이미지를 받아 PyTorch model inference를 수행하고, 알람 해제 성공 여부를 반환합니다.
 
-## Features
+## 주요 기능
 
-- General object recognition with ResNet18 or MobileNetV2
-- Custom object registration with multiple images
-- Custom object matching with cosine similarity
-- FastAPI Swagger UI for browser testing
+- `ResNet18` 또는 `MobileNetV2` 기반 `General Object Mode` inference
+- ImageNet top-k prediction
+- user-facing target object와 ImageNet label mapping
+- `Custom Object Mode` registration
+- custom object cosine similarity matching
+- Swagger UI를 통한 API 테스트
 
-## Folder Structure
+## 설치 방법
 
-```text
-backend/
-  main.py
-  model_loader.py
-  preprocessing.py
-  general_classifier.py
-  custom_similarity.py
-  storage.py
-  schemas.py
-  constants.py
-  requirements.txt
-  registered_objects/
-  embeddings/
-  README.md
-```
-
-## Setup on Windows
-
-Step 1: Open terminal in this folder:
-
-```text
-backend/
-```
-
-Step 2: Create a virtual environment:
-
-```bash
+```powershell
+cd backend
 python -m venv venv
-```
-
-Step 3: Activate the virtual environment:
-
-```bash
 venv\Scripts\activate
-```
-
-Step 4: Install packages:
-
-```bash
 pip install -r requirements.txt
 ```
 
-Step 5: Run the backend server:
+## 실행 방법
 
-```bash
+```powershell
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Step 6: Open Swagger UI:
+Swagger UI:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-## Setup on macOS or Linux
-
-Step 1: Open terminal in this folder:
-
-```text
-backend/
-```
-
-Step 2: Create a virtual environment:
-
-```bash
-python -m venv venv
-```
-
-Step 3: Activate the virtual environment:
-
-```bash
-source venv/bin/activate
-```
-
-Step 4: Install packages:
-
-```bash
-pip install -r requirements.txt
-```
-
-Step 5: Run the backend server:
-
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
 ## API Endpoints
 
-### GET /
+| Endpoint | Method | 설명 |
+|---|---|---|
+| `/` | GET | backend 기본 상태 확인 |
+| `/health` | GET | backend와 model 상태 확인 |
+| `/objects/general` | GET | 지원하는 general object 목록 반환 |
+| `/predict/general` | POST | `General Object Mode` 인식 수행 |
+| `/custom/register` | POST | custom object 등록 |
+| `/predict/custom` | POST | `Custom Object Mode` 인식 수행 |
+| `/objects/custom` | GET | 등록된 custom object 목록 반환 |
+| `/custom/{object_id}` | DELETE | 등록된 custom object 삭제 |
 
-Returns basic API status.
+## General Object Mode Logic
 
-### GET /health
+1. mobile app이 `/predict/general`로 이미지를 업로드합니다.
+2. backend가 이미지를 model input에 맞게 전처리합니다.
+3. 선택한 model인 `resnet` 또는 `mobilenet`이 ImageNet top-k label을 예측합니다.
+4. backend가 top-k label이 target object의 mapped label과 관련 있는지 확인합니다.
+5. matched confidence가 threshold 이상이면 success가 `true`가 됩니다.
 
-Returns backend and model status.
+Threshold:
 
-### GET /objects/general
+```text
+GENERAL_CONFIDENCE_THRESHOLD = 0.40
+```
 
-Returns the supported household object list.
+## Custom Object Mode Logic
 
-### POST /predict/general
+1. 사용자가 `/custom/register`로 custom object를 등록합니다.
+2. backend가 여러 등록 이미지에서 embedding을 추출합니다.
+3. 평균 embedding을 저장합니다.
+4. test image가 `/predict/custom`으로 업로드됩니다.
+5. backend가 test embedding과 saved embedding의 cosine similarity를 비교합니다.
+6. similarity가 threshold 이상이고 best-match 조건을 만족하면 success가 `true`가 됩니다.
 
-Form fields:
+Threshold:
 
-- `file`: uploaded image
-- `target_object`: one household object name
-- `model_name`: `resnet` or `mobilenet`
+```text
+CUSTOM_SIMILARITY_THRESHOLD = 0.88
+```
 
-Example:
+## 저장 위치
 
-```bash
+runtime 중 생성되는 custom object data는 아래에 저장됩니다.
+
+```text
+backend/embeddings/
+backend/registered_objects/
+```
+
+이 폴더들은 실행 중 생성되는 data를 담기 때문에 Git에는 올리지 않습니다.
+
+## API Test Examples
+
+### Health Check
+
+```powershell
+curl http://127.0.0.1:8000/health
+```
+
+### General Prediction
+
+```powershell
 curl -X POST "http://127.0.0.1:8000/predict/general" -F "file=@test.jpg" -F "target_object=bottle" -F "model_name=resnet"
 ```
 
-### POST /custom/register
+### Custom Register
 
-Form fields:
-
-- `object_id`: custom object name such as `my_bottle`
-- `files`: at least 5 uploaded images
-
-Example:
-
-```bash
+```powershell
 curl -X POST "http://127.0.0.1:8000/custom/register" -F "object_id=my_bottle" -F "files=@image1.jpg" -F "files=@image2.jpg" -F "files=@image3.jpg" -F "files=@image4.jpg" -F "files=@image5.jpg"
 ```
 
-### POST /predict/custom
+### Custom Prediction
 
-Form fields:
-
-- `object_id`: registered custom object id
-- `file`: uploaded image
-
-Example:
-
-```bash
+```powershell
 curl -X POST "http://127.0.0.1:8000/predict/custom" -F "object_id=my_bottle" -F "file=@test.jpg"
 ```
 
-### GET /objects/custom
+### Custom Delete
 
-Returns all registered custom objects.
+```powershell
+curl -X DELETE "http://127.0.0.1:8000/custom/my_bottle"
+```
 
-## Notes
+## 참고 사항
 
-- Backend means the Python server that receives images and runs the AI model.
-- API means the communication path between the mobile app and the backend server.
-- Endpoint means one API address such as `/predict/general`.
-- Virtual environment means an isolated Python environment for this project.
-- The first run may take time because PyTorch downloads pretrained model weights.
-- Do not upload `venv/`, `registered_objects/`, `embeddings/`, or large model files to GitHub unless you intentionally need them.
+- 첫 실행 시 PyTorch pretrained model weights를 다운로드하므로 시간이 걸릴 수 있습니다.
+- mobile app에서 recognition을 테스트하려면 backend가 먼저 실행 중이어야 합니다.
+- `venv/`, `embeddings/`, `registered_objects/`, large model files는 Git에 올리지 않습니다.

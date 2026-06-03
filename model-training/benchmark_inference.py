@@ -1,25 +1,18 @@
+import json
 import time
+from pathlib import Path
 
 import torch
-from torchvision.models import (
-    MobileNet_V2_Weights,
-    ResNet18_Weights,
-    mobilenet_v2,
-    resnet18,
-)
+from torchvision.models import MobileNet_V2_Weights, ResNet18_Weights, mobilenet_v2, resnet18
 
 
 WARMUP_RUNS = 5
 MEASURE_RUNS = 30
+OUTPUT_PATH = Path(__file__).resolve().parent / "benchmark_results.json"
 
 
 def count_parameters(model) -> int:
     return sum(parameter.numel() for parameter in model.parameters())
-
-
-def estimate_model_size_mb(model) -> float:
-    total_bytes = sum(parameter.numel() * parameter.element_size() for parameter in model.parameters())
-    return total_bytes / (1024 * 1024)
 
 
 def benchmark(name, model, device):
@@ -35,16 +28,33 @@ def benchmark(name, model, device):
             model(sample)
         elapsed = time.perf_counter() - start
 
-    print(
-        f"{name}: avg_inference_ms={(elapsed / MEASURE_RUNS) * 1000:.2f}, "
-        f"parameters={count_parameters(model):,}, estimated_size_mb={estimate_model_size_mb(model):.2f}"
-    )
+    avg_ms = (elapsed / MEASURE_RUNS) * 1000
+    return {
+        "model": name,
+        "avg_inference_ms": round(avg_ms, 2),
+        "avg_inference_seconds": round(avg_ms / 1000, 4),
+        "parameters": count_parameters(model),
+        "parameters_million": round(count_parameters(model) / 1_000_000, 2),
+        "warmup_runs": WARMUP_RUNS,
+        "measure_runs": MEASURE_RUNS,
+    }
 
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    benchmark("resnet18", resnet18(weights=ResNet18_Weights.DEFAULT).to(device), device)
-    benchmark("mobilenet_v2", mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT).to(device), device)
+    results = [
+        benchmark("resnet18", resnet18(weights=ResNet18_Weights.DEFAULT).to(device), device),
+        benchmark("mobilenet_v2", mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT).to(device), device),
+    ]
+
+    OUTPUT_PATH.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    print("Benchmark completed.")
+    print(f"Results saved to: {OUTPUT_PATH}")
+    print()
+    print("Model          Avg ms   Parameters")
+    for row in results:
+        print(f"{row['model']:<14} {row['avg_inference_ms']:>7.2f} {row['parameters']:>12}")
 
 
 if __name__ == "__main__":
