@@ -158,9 +158,9 @@ export const API_BASE_URL = "http://YOUR_LAPTOP_IP:8000";
 
 Android phone과 backend computer는 같은 Wi-Fi에 연결되어 있어야 합니다. local Wi-Fi 접속이 어렵다면 테스트용으로 `ngrok` 같은 tunneling tool을 사용할 수 있습니다.
 
-## 제출 및 테스트 방법
+##  테스트 방법
 
-교수님은 GitHub repository에서 source code와 문서를 확인할 수 있습니다. 실제 동작 테스트를 하려면 backend를 실행한 뒤 Expo app을 실행하면 됩니다. AI recognition은 server-based PyTorch inference로 동작하므로 backend가 실행 중이어야 합니다.
+GitHub repository에서 source code와 문서를 확인할 수 있습니다. 실제 동작 테스트를 하려면 backend를 실행한 뒤 Expo app을 실행하면 됩니다. AI recognition은 server-based PyTorch inference로 동작하므로 backend가 실행 중이어야 합니다.
 
 ## 한계
 
