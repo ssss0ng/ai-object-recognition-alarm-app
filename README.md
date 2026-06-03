@@ -88,8 +88,8 @@ backend는 ImageNet pretrained classification model의 top-k prediction과 label
 
 | Model | TP | FP | TN | FN | Accuracy | Precision | Recall | Avg Processing Time | Parameters |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ResNet18 | 46 | 36 | 524 | 34 | 0.575 | 0.6168 | 0.575 | 63.16 ms | 11.69M |
-| MobileNetV2 | 10 | 11 | 549 | 70 | 0.125 | 0.2344 | 0.125 | 49.81 ms | 3.50M |
+| ResNet18 | 46 | 36 | 524 | 34 | 0.8906 | 0.5610 | 0.5750 | 63.16 ms | 11.69M |
+| MobileNetV2 | 10 | 11 | 549 | 70 | 0.8734 | 0.4762 | 0.1250 | 49.81 ms | 3.50M |
 
 `TP`, `FP`, `TN`, `FN`은 `ResNet18`과 `MobileNetV2` 비교에만 사용했습니다.
 
