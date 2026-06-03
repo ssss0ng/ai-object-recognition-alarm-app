@@ -55,8 +55,8 @@
 
 | Model | TP | FP | TN | FN | Accuracy | Precision | Recall | Avg Processing Time | Parameters |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ResNet18 | 46 | 36 | 524 | 34 | 0.575 | 0.6168 | 0.575 | 63.16 ms | 11.69M |
-| MobileNetV2 | 10 | 11 | 549 | 70 | 0.125 | 0.2344 | 0.125 | 49.81 ms | 3.50M |
+| ResNet18 | 46 | 36 | 524 | 34 | 0.8906 | 0.5610 | 0.5750 | 63.16 ms | 11.69M |
+| MobileNetV2 | 10 | 11 | 549 | 70 | 0.8734 | 0.4762 | 0.1250 | 49.81 ms | 3.50M |
 
 `ResNet18`은 `MobileNetV2`보다 평균 처리 시간은 더 길지만, accuracy, precision, recall이 모두 높았다. `MobileNetV2`는 parameter 수가 더 적고 평균 처리 시간이 더 짧았지만, 본 프로젝트의 test image set에서는 threshold를 통과하는 성공률이 낮았다.
 
