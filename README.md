@@ -110,35 +110,88 @@ ResNet18은 MobileNetV2보다 accuracy, precision, recall이 더 높았고, Mobi
 
 ## 실행 방법
 
-### Backend 실행
+이 프로젝트는 mobile-app과 backend를 따로 실행해야 합니다. mobile app은 화면, 알람 flow, camera capture를 담당하고, backend는 PyTorch model inference를 담당합니다. 따라서 실제 객체 인식 테스트를 하려면 backend server가 먼저 실행되어 있어야 합니다.
+
+### 1. Project 다운로드
+
+GitHub repository를 clone합니다.
+
+```powershell
+git clone https://github.com/ssss0ng/ai-object-recognition-alarm-app.git
+cd ai-object-recognition-alarm-app
+```
+
+ZIP 파일로 받은 경우에는 압축을 푼 뒤 project root folder에서 terminal을 엽니다.
+
+### 2. Backend 실행
+
+backend folder로 이동합니다.
 
 ```powershell
 cd backend
+```
+
+Python virtual environment를 만듭니다.
+
+```powershell
 python -m venv venv
+```
+
+Windows에서 virtual environment를 활성화합니다.
+
+```powershell
 venv\Scripts\activate
+```
+
+필요한 Python package를 설치합니다.
+
+```powershell
 pip install -r requirements.txt
+```
+
+FastAPI server를 실행합니다.
+
+```powershell
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Swagger UI:
+실행이 성공하면 terminal에 `Uvicorn running on http://0.0.0.0:8000`과 비슷한 메시지가 보입니다. 이 terminal은 backend server용이므로 앱 테스트가 끝날 때까지 닫지 않습니다.
+
+Swagger UI는 browser에서 아래 주소로 확인할 수 있습니다.
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-### Mobile app 실행
+Swagger UI에서 `GET /health`를 실행했을 때 정상 응답이 오면 backend가 실행 중인 것입니다.
+
+### 3. Backend computer IP 확인
+
+Android phone에서 backend에 접속하려면 `127.0.0.1`이 아니라 backend computer의 Wi-Fi IP address를 사용해야 합니다.
+
+Windows terminal에서 아래 명령을 실행합니다.
 
 ```powershell
-cd mobile-app
-npm install
-npx expo start -c
+ipconfig
 ```
 
-Android phone에서 Expo Go로 실행합니다.
+출력 중 `IPv4 Address` 값을 찾습니다.
 
-### API_BASE_URL 설정
+예시:
 
-수정할 파일:
+```text
+IPv4 Address . . . . . . . . . . : 192.168.0.15
+```
+
+이 경우 backend 주소는 다음과 같습니다.
+
+```text
+http://192.168.0.15:8000
+```
+
+### 4. API_BASE_URL 설정
+
+mobile app이 backend에 접속할 수 있도록 아래 파일을 수정합니다.
 
 ```text
 mobile-app/constants/config.js
@@ -147,14 +200,118 @@ mobile-app/constants/config.js
 예시:
 
 ```javascript
-export const API_BASE_URL = "http://YOUR_LAPTOP_IP:8000";
+export const API_BASE_URL = "http://192.168.0.15:8000";
 ```
 
-Android phone과 backend computer는 같은 Wi-Fi에 연결되어 있어야 합니다. local Wi-Fi 접속이 어렵다면 테스트용으로 ngrok 같은 tunneling tool을 사용할 수 있습니다.
+주의:
 
-##  테스트 방법
+- Android phone과 backend computer는 같은 Wi-Fi에 연결되어 있어야 합니다.
+- Android phone에서 `127.0.0.1`은 phone 자기 자신을 의미하므로 backend computer에 접속할 수 없습니다.
+- backend server terminal이 꺼져 있으면 recognition request가 실패합니다.
 
-GitHub repository에서 source code와 문서를 확인할 수 있습니다. 실제 동작 테스트를 하려면 backend를 실행한 뒤 Expo app을 실행하면 됩니다. AI recognition은 server-based PyTorch inference로 동작하므로 backend가 실행 중이어야 합니다.
+### 5. Mobile app 실행
+
+새 terminal을 열고 project root에서 mobile app folder로 이동합니다.
+
+```powershell
+cd mobile-app
+```
+
+필요한 npm package를 설치합니다.
+
+```powershell
+npm install
+```
+
+Expo development server를 실행합니다.
+
+```powershell
+npx expo start -c
+```
+
+terminal에 QR code가 나타나면 Android phone에서 `Expo Go` app을 열고 QR code를 scan합니다.
+
+### 6. Backend 연결 확인
+
+앱이 실행되면 `HomeScreen`에서 `Check Backend Connection` 버튼을 누릅니다.
+
+성공 시:
+
+```text
+Backend connected successfully.
+```
+
+실패 시:
+
+```text
+Backend connection failed. Check API_BASE_URL or make sure FastAPI is running.
+```
+
+실패하면 아래를 확인합니다.
+
+1. backend server가 켜져 있는지 확인합니다.
+2. `API_BASE_URL`이 backend computer의 IPv4 address로 되어 있는지 확인합니다.
+3. Android phone과 backend computer가 같은 Wi-Fi에 연결되어 있는지 확인합니다.
+4. Windows firewall이 Python 또는 `uvicorn` 접속을 막고 있지 않은지 확인합니다.
+
+## 테스트 방법
+
+### General Object Mode 테스트
+
+1. `HomeScreen`에서 `Create Alarm`을 누릅니다.
+2. alarm time을 입력합니다.
+3. `General Object Mode`를 선택합니다.
+4. `bottle`, `cup`, `book`, `keyboard`, `mouse`, `laptop`, `toothbrush`, `remote control` 중 하나 이상을 선택합니다.
+5. `Save Alarm`을 누릅니다.
+6. `HomeScreen`에서 생성된 alarm card를 누릅니다.
+7. `Alarm management` menu에서 `Start Test`를 선택합니다.
+8. `AlarmRingingScreen`에서 required target object를 확인합니다.
+9. `Open Camera`를 누르고 target object를 촬영합니다.
+10. `Submit for Recognition`을 누릅니다.
+11. `ResultScreen`에서 아래 값을 확인합니다.
+
+```text
+Required target
+Top prediction
+Matched target label
+Required confidence threshold
+Processing time
+Result
+Top predictions
+```
+
+성공하면 `Return to Home`을 누르고, 실패하면 `Retake Photo`로 다시 촬영합니다.
+
+### Custom Object Mode 테스트
+
+먼저 custom object를 등록합니다.
+
+1. `HomeScreen`에서 `Register Custom Object`를 누릅니다.
+2. `Custom Object ID`를 입력합니다. 예: `my_bottle`
+3. 같은 object를 최소 5장 이상 촬영합니다.
+4. `Register Custom Object`를 누릅니다.
+
+그다음 custom alarm을 만듭니다.
+
+1. `HomeScreen`에서 `Create Alarm`을 누릅니다.
+2. alarm time을 입력합니다.
+3. `Custom Object Mode`를 선택합니다.
+4. 등록된 custom object를 선택합니다.
+5. `Use Selected Object`를 눌러 alarm을 저장합니다.
+6. `HomeScreen`에서 alarm card를 누릅니다.
+7. `Alarm management` menu에서 `Start Test`를 선택합니다.
+8. `Open Camera`를 누르고 등록한 object를 촬영합니다.
+9. `Submit for Recognition`을 누릅니다.
+10. `ResultScreen`에서 아래 값을 확인합니다.
+
+```text
+Required object ID
+Similarity
+Required similarity threshold
+Best match
+Processing time
+Result
+```
 
 ## 한계
 
