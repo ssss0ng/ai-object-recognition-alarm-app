@@ -83,12 +83,3 @@
 | Custom | cup | 일부 trial에서 similarity 0.8770 또는 0.8648 | threshold에 근접한 실패 |
 | Low light | custom toothbrush | similarity가 0.88 아래로 감소 | 저조도 환경에서 feature 품질 저하 |
 
-## 보고서에 넣을 요약 문장
-
-실험 결과, `Custom Object Mode`는 전체 성공률 90.0%로 `General Object Mode`의 72.5%보다 높은 인식 성공률을 보였다. 다만 평균 processing time은 `Custom Object Mode`가 2.704초로 `General Object Mode`의 2.313초보다 약간 길었다.
-
-`General Object Mode`는 별도 등록 없이 사용할 수 있다는 장점이 있지만, ImageNet pretrained model의 label에 의존하기 때문에 target object와 model prediction label이 다르면 실패할 수 있다. 특히 `toothbrush`는 모든 trial에서 실패하여 pretrained classification 방식의 한계를 보여주었다.
-
-반면 `Custom Object Mode`는 사용자가 직접 등록한 object embedding을 기준으로 비교하기 때문에 개인 물건 인식에 더 안정적이었다. 그러나 등록 사진과 테스트 사진의 각도, 거리, 조명 조건이 크게 달라지면 similarity가 낮아져 실패할 수 있다.
-
-저조도 실험에서는 일반 조명 대비 성공률이 낮아지는 경향이 확인되었다. 처리 시간은 조명 조건에 따라 큰 차이가 없었으므로, 저조도 환경의 주요 영향은 속도보다 인식 정확도 저하로 해석할 수 있다.
